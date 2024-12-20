@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'includes/db.php'; // Include your database connection
+include 'includes/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'];
@@ -12,11 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($result && mysqli_num_rows($result) > 0) {
         $user = mysqli_fetch_assoc($result);
 
-        // Verify password
         if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['name'];
-            header("Location: dashboard.php"); // Redirect to a dashboard page
+            header("Location:\user\profile.php");
             exit;
         } else {
             $error = "Invalid password.";
