@@ -1,410 +1,182 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <!-- Basic -->
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <!-- Mobile Metas -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <!-- Site Metas -->
-  <meta name="keywords" content="" />
-  <meta name="description" content="" />
-  <meta name="author" content="" />
-  <link rel="shortcut icon" href="images/favicon.png" type="">
-
-  <title> Blog</title>
-
-  <!-- bootstrap core css -->
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
-
-  <!-- fonts style -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-
-  <!--owl slider stylesheet -->
-  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
-
-  <!-- font awesome style -->
-  <link href="css/font-awesome.min.css" rel="stylesheet" />
-
-  <!-- Custom styles for this template -->
-  <link href="css/style.css" rel="stylesheet" />
-  <!-- responsive style -->
-  <link href="css/responsive.css" rel="stylesheet" />
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body>
+<?php
+include('./includes/db.php');
+session_start();
+$userLoggedIn = isset($_SESSION['user_id']); 
 
-  <div class="hero_area">
+if ($userLoggedIn && isset($_GET['like'])) {
+    $article_id = $_GET['like'];
+    $user_id = $_SESSION['user_id'];
+    
+    // Vérifie si l'user deja aimer ce article
+    $checkLikeQuery = "SELECT * FROM likes WHERE user_id = $user_id AND article_id = $article_id";
+    $checkLikeResult = mysqli_query($conn, $checkLikeQuery);
 
-    <div class="hero_bg_box">
-      <div class="bg_img_box">
-        <img src="images/hero-bg.png" alt="">
-      </div>
+    if (mysqli_num_rows($checkLikeResult) == 0) {
+        // ajouter like si l'ser na pas encore aimer
+        $likeQuery = "INSERT INTO likes (user_id, article_id) VALUES ($user_id, $article_id)";
+        mysqli_query($conn, $likeQuery);
+    } else {
+        // supprimer like si l'iser deja liker
+        $unlikeQuery = "DELETE FROM likes WHERE user_id = $user_id AND article_id = $article_id";
+        mysqli_query($conn, $unlikeQuery);
+    }
+}
+
+if ($userLoggedIn) {
+    $userId = $_SESSION['user_id'];
+
+    $sql = "SELECT role_id FROM users WHERE id = $userId";
+    $result = $conn->query($sql);
+    $role = null;
+    
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $role = $row['role_id']; 
+    }
+}
+?>
+<header class="flex justify-between p-4">
+    <a href="/index.php" id="cars">
+        <img src="images/cars.gif" alt="">
+    </a>
+    <div class="lg:hidden" id="burger-icon">
+        <img src="images/menu.png" alt="Menu">
     </div>
+    <div id="sidebar" class="shadow-xl fixed top-0 right-0 w-1/3 h-full bg-gray-200 z-50 transform translate-x-full duration-300">
+        <div class="flex justify-end p-4">
+            <button id="close-sidebar" class="text-3xl">X</button>
+        </div>
+        <div class="flex flex-col items-center space-y-4 text-white">
+            <a href="home.php" class="text-black text-lg">Home</a>
+            <a href="index.php" class="text-black text-lg">Blog</a>
+            <?php if ($userLoggedIn): ?>
+                <?php if ($role == 1): ?>
+                    <!-- Admin, n'affiche pas Dashboard -->
+                    <a href="/pages/dashboard.php" class="text-black text-lg">Dashboard</a>
+                <?php endif; ?>
+                <?php if ($role == 2): ?>
+                    <!-- User, n'affiche pas Profile -->
+                    <a href="/pages/profile.php" class="text-black text-lg">Profile</a>
+                <?php endif; ?>
+                <a href="/pages/logout.php" class="text-red-500 text-lg">Log out</a>
+            <?php else: ?>
+                <a href="/pages/signup.php" class="text-blue-500 text-lg">Sign Up</a>
+            <?php endif; ?>
+        </div>
+    </div>
+    <div class="hidden lg:flex justify-center space-x-4">
+        <ul class="flex items-center text-sm font-medium text-gray-400 mb-0">
+            <li><a href="home.php" class="hover:underline me-4 md:me-6">Home</a></li>
+            <li><a href="index.php" class="hover:underline me-4 md:me-6">Blog</a></li>
+            <?php if ($userLoggedIn): ?>
+                <?php if ($role == 1): ?>
+                    <!-- Admin, n'affiche pas Dashboard -->
+                    <li><a href="/pages/dashboard.php" class="hover:underline me-4 md:me-6">Dashboard</a></li>
+                <?php endif; ?>
+                <?php if ($role == 2): ?>
+                    <!-- User, n'affiche pas Profile -->
+                    <li><a href="/pages/profile.php" class="hover:underline me-4 md:me-6">Profile</a></li>
+                <?php endif; ?>
+                <li><a href="/pages/logout.php" class="text-red-500 hover:underline me-4 md:me-6">Log out</a></li>
+            <?php else: ?>
+                <li>
+                    <a href="/pages/signup.php" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 me-4 md:me-6">Sign Up</a>
+                </li>
+            <?php endif; ?>
+        </ul>
+    </div>
+</header>
 
-    <!-- header section strats -->
-    <header class="header_section">
-      <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg custom_nav-container ">
-          <a class="navbar-brand" href="index.html">
-            <span>
-              Blog
-            </span>
-          </a>
+<section class="bg-white py-8"> 
+    <div class="container mx-auto px-4"> 
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">Articles Disponibles</h2> 
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+             <?php 
+             $query = "SELECT articles.*, users.username, GROUP_CONCAT(tags.name SEPARATOR ', ') AS tags, 
+                            (SELECT COUNT(*) FROM likes WHERE article_id = articles.id) AS like_count
+                        FROM articles
+                        JOIN users ON articles.user_id = users.id
+                        LEFT JOIN article_tags ON articles.id = article_tags.article_id
+                        LEFT JOIN tags ON article_tags.tag_id = tags.id
+                        GROUP BY articles.id";
+             $result = mysqli_query($conn, $query);
 
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class=""> </span>
-          </button>
+             if ($result && mysqli_num_rows($result) > 0) {
+                 while ($row = mysqli_fetch_assoc($result)) {
+                     // Variables protégées contre XSS
+                     $title = htmlspecialchars($row['title']);
+                     $content = htmlspecialchars($row['content']);
+                     $image = htmlspecialchars($row['image']);
+                     $username = htmlspecialchars($row['username']);
+                     $created_at = htmlspecialchars($row['created_at']);
+                     $tags = !empty($row['tags']) ? htmlspecialchars($row['tags']) : '';
+                     $like_count = $row['like_count'];
+                     
+                     // Affichage
+             ?>
+                    <div class="bg-gray-100 rounded-lg shadow-md p-4">
+                        <div class="flex justify-between">
+                            <h3 class="text-xl font-bold mb-2"><?= $title; ?></h3>
+                        </div>
+                        <p class="text-gray-700 mb-4"><?= $content; ?></p>
+                        <img src="./uploads/<?= $image; ?>" alt="Image de l'article" class="w-full h-48 object-cover mb-4 rounded-lg">
+                        <p class="text-gray-600 text-sm">
+                            Par <?= $username; ?> le <?= $created_at; ?>
+                        </p>
+                        <?php if (!empty($tags)): ?>
+                            <p class="text-gray-600 text-sm">Tags : <?= $tags; ?></p>
+                        <?php endif; ?>
+                        <p class="text-blue-600 text-sm underline">
+                            <a href="./pages/comments.php?article_id=<?= $row['id']; ?>">View all comments</a>
+                        </p>
+                        <p class="text-gray-600 text-sm">Likes: <?= $like_count; ?></p>
 
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav  ">
-              <li class="nav-item active">
-                <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="service.html">Blog</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="login.php"> <i class="fa fa-user" aria-hidden="true"></i> Login</a>
-              </li>
-              <form class="form-inline">
-                <button class="btn  my-2 my-sm-0 nav_search-btn" type="submit">
-                  <i class="fa fa-search" aria-hidden="true"></i>
-                </button>
-              </form>
-            </ul>
-          </div>
-        </nav>
-      </div>
-    </header>
-    <!-- end header section -->
-    <!-- slider section -->
-    <section class="slider_section ">
-      <div id="customCarousel1" class="carousel slide" data-ride="carousel">
-        <div class="carousel-inner">
-          <div class="carousel-item active">
-            <div class="container ">
-              <div class="row">
-                <div class="col-md-6 ">
-                  <div class="detail-box">
-                    <h1>
-                      Blog Post
-                    </h1>
-                    <p>
-                      Stay up-to date with all the latosDev on our Radmos dynamic world of web                    </p>
-                    <div class="btn-box">
-                      <a href="" class="btn1">
-                        Read More
-                      </a>
+                        <div class="flex justify-between mt-4">
+                            <a href="?like=<?= $row['id']; ?>" class="text-blue-700 border border-blue-700 hover:bg-blue-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm p-2.5 text-center inline-flex items-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500">
+                                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 18">
+                                    <path d="M3 7H1a1 1 0 0 0-1 1v8a2 2 0 0 0 4 0V8a1 1 0 0 0-1-1Zm12.954 0H12l1.558-4.5a1.778 1.778 0 0 0-3.331-1.06A24.859 24.859 0 0 1 6 6.8v9.586h.114C8.223 16.969 11.015 18 13.6 18c1.4 0 1.592-.526 1.88-1.317l2.354-7A2 2 0 0 0 15.954 7Z"/>
+                                </svg>
+                            </a>
+                            <a href="./pages/add_comment.php?article_id=<?= $row['id']; ?>" class="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-blue-700 rounded-lg focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-900 hover:bg-primary-800">
+                                Post comment
+                            </a>  
+                        </div>
                     </div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="img-box">
-                    <img src="images/slider-img.png" alt="">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="carousel-item ">
-            <div class="container ">
-              <div class="row">
-                <div class="col-md-6 ">
-                  <div class="detail-box">
-                    <h1>
-                      BLOG
-                    </h1>
-                    <p>
-                      The sentence is inviting people to stay informed about the latest updates or advancements coming from Radmos, which appears to be a brand, company, or platform. It emphasizes the evolving and dynamic nature of the web development field and positions Radmos as a significant player within it.                    </p>
-                    <div class="btn-box">
-                      <a href="" class="btn1">
-                        Read More
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="img-box">
-                    <img src="images/slider-img.png" alt="">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-       
+                <?php
+                }
+            } else {
+                echo "<p>Aucun article trouvé.</p>";
+            }
+            ?>
         </div>
-        <ol class="carousel-indicators">
-          <li data-target="#customCarousel1" data-slide-to="0" class="active"></li>
-          <li data-target="#customCarousel1" data-slide-to="1"></li>
-          <li data-target="#customCarousel1" data-slide-to="2"></li>
-        </ol>
-      </div>
-
-    </section>
-    <!-- end slider section -->
-  </div>
-
-  <!-- about section -->
-
-  <section class="about_section layout_padding">
-    <div class="container  ">
-      <div class="heading_container heading_center">
-        <h2>
-          About <span>Us</span>
-        </h2>
-        <p>
-          The sentence is inviting people to stay informed about the latest updates or advancements coming from Radmos, which appears to be a brand, company, or platform. It emphasizes the evolving and dynamic nature of the web development field and positions Radmos as a significant player within it.        </p>
-      </div>
-      <div class="row">
-        <div class="col-md-6 ">
-          <div class="img-box">
-            <img src="images/about-img.png" alt="">
-          </div>
-        </div>
-        <div class="col-md-6">
-          
-        </div>
-      </div>
     </div>
-  </section>
+</section>
 
-  <!-- end about section -->
+<script>
+    const menu = document.getElementById("burger-icon");
+    const sidebar = document.getElementById("sidebar");
+    const closeSidebar = document.getElementById("close-sidebar");
 
-  <!-- client section -->
+    menu.addEventListener("click", () => {
+        sidebar.classList.remove("translate-x-full");  
+        sidebar.classList.add("translate-x-0");
+    });
 
-  <section class="client_section layout_padding">
-    <div class="container">
-      <div class="heading_container heading_center psudo_white_primary mb_45">
-        <h2>
-         <span>Articles</span>
-        </h2>
-      </div>
-      <div class="carousel-wrap ">
-        <div class="owl-carousel client_owl-carousel">
-          <div class="item">
-            <div class="box">
-              <div class="img-box">
-                <img src="images/client1.jpg" alt="" class="box-img">
-              </div>
-              <div class="detail-box">
-                <div class="client_id">
-                  <div class="client_info">
-                    <h6>
-                      LusDen
-                    </h6>
-                    <p>
-                      magna aliqua. Ut
-                    </p>
-                  </div>
-                  <i class="fa fa-quote-left" aria-hidden="true"></i>
-                </div>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis </p>
-              </div>
-            </div>
-          </div>
-          <div class="item">
-            <div class="box">
-              <div class="img-box">
-                <img src="images/client2.jpg" alt="" class="box-img">
-              </div>
-              <div class="detail-box">
-                <div class="client_id">
-                  <div class="client_info">
-                    <h6>
-                      Zen Court
-                    </h6>
-                    <p>
-                      magna aliqua. Ut
-                    </p>
-                  </div>
-                  <i class="fa fa-quote-left" aria-hidden="true"></i>
-                </div>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis </p>
-              </div>
-            </div>
-          </div>
-          <div class="item">
-            <div class="box">
-              <div class="img-box">
-                <img src="images/client1.jpg" alt="" class="box-img">
-              </div>
-              <div class="detail-box">
-                <div class="client_id">
-                  <div class="client_info">
-                    <h6>
-                      LusDen
-                    </h6>
-                    <p>
-                      magna aliqua. Ut
-                    </p>
-                  </div>
-                  <i class="fa fa-quote-left" aria-hidden="true"></i>
-                </div>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis </p>
-              </div>
-            </div>
-          </div>
-          <div class="item">
-            <div class="box">
-              <div class="img-box">
-                <img src="images/client2.jpg" alt="" class="box-img">
-              </div>
-              <div class="detail-box">
-                <div class="client_id">
-                  <div class="client_info">
-                    <h6>
-                      Zen Court
-                    </h6>
-                    <p>
-                      magna aliqua. Ut
-                    </p>
-                  </div>
-                  <i class="fa fa-quote-left" aria-hidden="true"></i>
-                </div>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- end client section -->
-
-
-  <!-- info section -->
-
-  <section class="info_section layout_padding2">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-6 col-lg-3 info_col">
-          <div class="info_contact">
-            <h4>
-              Address
-            </h4>
-            <div class="contact_link_box">
-              <a href="">
-                <i class="fa fa-map-marker" aria-hidden="true"></i>
-                <span>
-                  Location
-                </span>
-              </a>
-              <a href="">
-                <i class="fa fa-phone" aria-hidden="true"></i>
-                <span>
-                  Call +01 1234567890
-                </span>
-              </a>
-              <a href="">
-                <i class="fa fa-envelope" aria-hidden="true"></i>
-                <span>
-                  demo@gmail.com
-                </span>
-              </a>
-            </div>
-          </div>
-          <div class="info_social">
-            <a href="">
-              <i class="fa fa-facebook" aria-hidden="true"></i>
-            </a>
-            <a href="">
-              <i class="fa fa-twitter" aria-hidden="true"></i>
-            </a>
-            <a href="">
-              <i class="fa fa-linkedin" aria-hidden="true"></i>
-            </a>
-            <a href="">
-              <i class="fa fa-instagram" aria-hidden="true"></i>
-            </a>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-3 info_col">
-          <div class="info_detail">
-            <h4>
-              Info
-            </h4>
-            <p>
-              necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful
-            </p>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-2 mx-auto info_col">
-          <div class="info_link_box">
-            <h4>
-              Links
-            </h4>
-            <div class="info_links">
-              <a class="active" href="index.html">
-                Home
-              </a>
-              <a class="" href="about.html">
-                About
-              </a>
-              <a class="" href="service.html">
-                Services
-              </a>
-              <a class="" href="why.html">
-                Why Us
-              </a>
-              <a class="" href="team.html">
-                Team
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-3 info_col ">
-          <h4>
-            Subscribe
-          </h4>
-          <form action="#">
-            <input type="text" placeholder="Enter email" />
-            <button type="submit">
-              Subscribe
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- end info section -->
-
-  <!-- footer section -->
-  <section class="footer_section">
-    <div class="container">
-      <p>
-        &copy; <span id="displayYear"></span> All Rights Reserved By
-        <a href="https://html.design/">Free Html Templates</a>
-      </p>
-    </div>
-  </section>
-  <!-- footer section -->
-
-  <!-- jQery -->
-  <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
-  <!-- popper js -->
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
-  </script>
-  <!-- bootstrap js -->
-  <script type="text/javascript" src="js/bootstrap.js"></script>
-  <!-- owl slider -->
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js">
-  </script>
-  <!-- custom js -->
-  <script type="text/javascript" src="js/custom.js"></script>
-  <!-- Google Map -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
-  </script>
-  <!-- End Google Map -->
-
+    closeSidebar.addEventListener("click", () => {
+        sidebar.classList.add("translate-x-full");    
+        sidebar.classList.remove("translate-x-0");   
+    });
+</script>
 </body>
-
 </html>
